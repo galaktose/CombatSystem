@@ -2,7 +2,7 @@
 #include "CharacterBase.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "EnhancedInput/EnhancedInputComponent.h"          // ADDED
+#include "EnhancedInputComponent.h"          // ADDED
 #include "GameplayTagContainer.h"             // ADDED
 
 ACharacterBase::ACharacterBase()
@@ -86,7 +86,7 @@ UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-// ADDED below
+// Stance Set
 void ACharacterBase::SetStance(ECombatStance NewStance)
 {
 	CurrentStance = NewStance;
@@ -109,6 +109,7 @@ void ACharacterBase::ToggleStance()
 	SetStance(CurrentStance == ECombatStance::Melee ? ECombatStance::Ranged : ECombatStance::Melee);
 }
 
+// Stance Input
 void ACharacterBase::Input_ToggleStance()
 {
 	ToggleStance();
@@ -116,20 +117,20 @@ void ACharacterBase::Input_ToggleStance()
 
 void ACharacterBase::Input_Attack()
 {
-	// Day 3: activate melee combo or ranged fire ability depending on CurrentStance
+	//Attack Input
 }
 
 void ACharacterBase::Input_Aim(bool bStarted)
 {
-	// Day 3: add/remove State.Aiming loose tag based on bStarted
+	//Aim Input
 }
 
 void ACharacterBase::Input_Reload()
 {
-	// Day 3
+	//Reload Input
 }
 
 void ACharacterBase::Input_Special()
 {
-	// Day 5
+	//Special Ability Input
 }

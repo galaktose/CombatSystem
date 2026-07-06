@@ -4,8 +4,7 @@
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
-
-#include "CombatAttributeSet.h"        // Added
+#include "../Attributes/CombatAttributeSet.h"       // Added
 #include "CharacterBase.generated.h"
 
 UENUM(BlueprintType)                  // ADDED
