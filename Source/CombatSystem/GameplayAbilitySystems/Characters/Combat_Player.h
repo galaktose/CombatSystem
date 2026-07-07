@@ -11,6 +11,7 @@ class COMBATSYSTEM_API ACombat_Player : public ACharacterBase
 
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* NewController) override;
 
 protected:
 	void Input_Attack();
@@ -29,4 +30,7 @@ protected:
 	class UInputAction* IA_Reload;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Special;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> TestAbilityClass;
 };

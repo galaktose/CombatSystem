@@ -24,6 +24,16 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
+void ACombat_Player::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (AbilitySystemComponent && TestAbilityClass)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(TestAbilityClass, 1));
+	}
+}
+
 void ACombat_Player::Input_ToggleStance()
 {
 	ToggleStance(); // inherited from ACharacterBase
@@ -31,7 +41,10 @@ void ACombat_Player::Input_ToggleStance()
 
 void ACombat_Player::Input_Attack()
 {
-	//Attack
+	if (AbilitySystemComponent && TestAbilityClass)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(TestAbilityClass);
+	}
 }
 
 void ACombat_Player::Input_Aim(bool bStarted)
