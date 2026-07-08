@@ -14,6 +14,7 @@ void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	// TriggerEventData->EventTag will carry which combo stage (Ability.Melee.Combo1/2/3) triggered this
+	UE_LOG(LogTemp, Warning, TEXT("ActivateAbility: %s"),*TriggerEventData->EventTag.ToString());
 	bool bIsCritical = TriggerEventData &&
 		TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo3"));
 
@@ -24,6 +25,7 @@ void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
 {
+	UE_LOG(LogTemp, Warning, TEXT("DoMeleeTrace"));
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (!Character) return;
 
@@ -40,14 +42,19 @@ void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
 		false, ActorsToIgnore, EDrawDebugTrace::ForDuration,
 		Hits, true);
 
-	UE_LOG(LogTemp, Warning, TEXT("Melee trace hit %d actors"), Hits.Num());
+	TSet<AActor*> AlreadyHit; // tracks unique actors this trace to prevent multiple damage applications in a single trace
 
 	for (const FHitResult& Hit : Hits)
 	{
-		if (Hit.GetActor())
+		AActor* HitActor = Hit.GetActor();
+		if (HitActor && !AlreadyHit.Contains(HitActor))
 		{
+			AlreadyHit.Add(HitActor);
+
 			float Damage = bIsCritical ? BaseDamage * 2.f : BaseDamage;
-			ApplyDamageToTarget(Hit.GetActor(), Damage);
+			ApplyDamageToTarget(HitActor, Damage);
+
+			UE_LOG(LogTemp, Warning, TEXT("Applied %.1f damage to %s"), Damage, *HitActor->GetName());
 		}
 	}
 }

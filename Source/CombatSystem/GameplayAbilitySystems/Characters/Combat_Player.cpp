@@ -33,6 +33,7 @@ void ACombat_Player::PossessedBy(AController* NewController)
 
 	if (MeleeComboAbilityClass)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Giving Melee Ability"));
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(MeleeComboAbilityClass, 1));
 	}
 
@@ -60,6 +61,7 @@ void ACombat_Player::Input_Attack()
 	{
 		AbilitySystemComponent->TryActivateAbilityByClass(TestAbilityClass);
 	}*/
+	UE_LOG(LogTemp, Warning, TEXT("Input_Attack called"));
 	if (CurrentStance == ECombatStance::Melee)
 	{
 		MeleeComboCount = (MeleeComboCount % 3) + 1; // cycles 1,2,3,1,2,3...
