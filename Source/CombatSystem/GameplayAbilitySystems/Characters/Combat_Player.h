@@ -33,4 +33,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<class UGameplayAbility> TestAbilityClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> MeleeComboAbilityClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> RangedFireAbilityClass; 
+
+	// Combo system
+	int32 MeleeComboCount = 0;
+	FTimerHandle ComboResetTimerHandle;
+	void ResetCombo();
 };
