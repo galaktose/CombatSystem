@@ -46,15 +46,17 @@ void ATargetDummy::PerformAutoAttack()
 
 void ATargetDummy::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
+	if (bIsDead) return;
 	if (Data.NewValue <= 0.f)
 	{
+		bIsDead = true;
 		HandleDeath();
 	}
 }
 
 void ATargetDummy::HandleDeath()
 {
-	// TODO: play death anim/VFX/SFX before respawn 
+	
 	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 
 	FTimerHandle RespawnTimer;
@@ -70,6 +72,8 @@ void ATargetDummy::Respawn()
 	{
 		CombatAttributeSet->SetHealth(CombatAttributeSet->GetMaxHealth());
 	}
+
+	bIsDead = false;
 
 	GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &ATargetDummy::PerformAutoAttack, AttackInterval, true);
 }

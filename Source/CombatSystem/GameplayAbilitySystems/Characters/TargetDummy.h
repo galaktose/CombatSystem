@@ -29,6 +29,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float RespawnRadius = 500.f;
 
+	bool bIsDead = false; //Flag to track if the dummy is dead
 	FTimerHandle AttackTimerHandle;
 	FVector SpawnOrigin;
 

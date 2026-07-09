@@ -33,7 +33,7 @@ void UGA_CombatAbilityBase::ApplyDamageToTarget(AActor* TargetActor, float Damag
 	{
 		SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName("Data.Damage")), DamageAmount);
 		SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
-		//UE_LOG(LogTemp, Warning, TEXT("Applied %.1f damage to %s"), DamageAmount, *TargetActor->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("Applied %f damage to %s"), DamageAmount, *TargetActor->GetName()); //check damage received by player
 	}
 	else
 	{
