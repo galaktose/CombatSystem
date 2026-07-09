@@ -66,7 +66,6 @@ UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 void ACharacterBase::SetStance(ECombatStance NewStance)
 {
 	CurrentStance = NewStance;
-	UE_LOG(LogTemp, Warning, TEXT("Stance changed to: %s"), NewStance == ECombatStance::Melee ? TEXT("Melee") : TEXT("Ranged"));
 
 	if (AbilitySystemComponent)
 	{
@@ -75,9 +74,14 @@ void ACharacterBase::SetStance(ECombatStance NewStance)
 
 		AbilitySystemComponent->RemoveLooseGameplayTag(MeleeTag);
 		AbilitySystemComponent->RemoveLooseGameplayTag(RangedTag);
-
 		AbilitySystemComponent->AddLooseGameplayTag(
 			NewStance == ECombatStance::Melee ? MeleeTag : RangedTag);
+
+		// force clear aiming tag if switching away from ranged stance
+		if (NewStance != ECombatStance::Ranged)
+		{
+			AbilitySystemComponent->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("State.Aiming")));
+		}
 	}
 }
 

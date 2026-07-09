@@ -64,7 +64,7 @@ void ACombat_Player::Input_Attack()
 	UE_LOG(LogTemp, Warning, TEXT("Input_Attack called"));
 	if (CurrentStance == ECombatStance::Melee)
 	{
-		MeleeComboCount = (MeleeComboCount % 3) + 1; // cycles 1,2,3,1,2,3...
+		MeleeComboCount = (MeleeComboCount % 3) + 1; // cycles 1,2,3
 
 		FGameplayTag ComboTag = FGameplayTag::RequestGameplayTag(
 			FName(*FString::Printf(TEXT("Ability.Melee.Combo%d"), MeleeComboCount)));
@@ -78,7 +78,15 @@ void ACombat_Player::Input_Attack()
 	}
 	else if (CurrentStance == ECombatStance::Ranged)
 	{
-		if (CombatAttributeSet && CombatAttributeSet->GetCurrentAmmo() > 0)
+		const FGameplayTag AimTag = FGameplayTag::RequestGameplayTag(FName("State.Aiming"));
+		const bool bHasAimTag = AbilitySystemComponent->HasMatchingGameplayTag(AimTag);
+
+		UE_LOG(LogTemp, Warning, TEXT("Ranged attack attempted, HasAimTag: %s"),
+			bHasAimTag ? TEXT("true") : TEXT("false"));
+
+		if (bHasAimTag &&
+			CombatAttributeSet &&
+			CombatAttributeSet->GetCurrentAmmo() > 0)
 		{
 			AbilitySystemComponent->TryActivateAbilityByClass(RangedFireAbilityClass);
 			CombatAttributeSet->SetCurrentAmmo(CombatAttributeSet->GetCurrentAmmo() - 1.f);
@@ -94,11 +102,20 @@ void ACombat_Player::ResetCombo()
 
 void ACombat_Player::Input_Aim(bool bStarted)
 {
+	if (CurrentStance != ECombatStance::Ranged)
+	{
+		return; // aiming only relevant in Ranged stance
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Input_Aim called, bStarted: %s"), bStarted ? TEXT("true") : TEXT("false"));
+
 	FGameplayTag AimTag = FGameplayTag::RequestGameplayTag(FName("State.Aiming"));
 	if (bStarted)
 		AbilitySystemComponent->AddLooseGameplayTag(AimTag);
 	else
 		AbilitySystemComponent->RemoveLooseGameplayTag(AimTag);
+
+	OnAimStateChanged(bStarted);
 }
 
 void ACombat_Player::Input_Reload()

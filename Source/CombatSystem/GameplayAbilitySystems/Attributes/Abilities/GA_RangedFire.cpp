@@ -6,6 +6,11 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "../CombatAttributeSet.h"
 
+UGA_RangedFire::UGA_RangedFire()
+{
+	ActivationRequiredTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Aiming")));
+}
+
 void UGA_RangedFire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -16,7 +21,7 @@ void UGA_RangedFire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		return;
 	}
 
-	// Ammo check happens on the Character side before this ability is even activated (Step 5)
+	// Ammo check happens on the Character side before this ability is activated
 
 	FVector Start = Character->GetPawnViewLocation();
 	FVector End = Start + Character->GetControlRotation().Vector() * TraceRange;

@@ -20,6 +20,9 @@ protected:
 	void Input_Reload();
 	void Input_Special();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnAimStateChanged(bool bIsAiming);
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Attack;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")

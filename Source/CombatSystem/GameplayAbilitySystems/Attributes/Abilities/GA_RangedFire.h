@@ -17,6 +17,7 @@ class COMBATSYSTEM_API UGA_RangedFire : public UGA_CombatAbilityBase
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	UGA_RangedFire();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
