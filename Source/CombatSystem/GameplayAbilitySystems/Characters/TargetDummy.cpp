@@ -15,7 +15,7 @@ void ATargetDummy::BeginPlay()
 
 	SpawnOrigin = GetActorLocation();
 
-	// Dummy isn't Controller-possessed by default, so init ASC here directly
+	// init asc here
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);
@@ -54,7 +54,7 @@ void ATargetDummy::OnHealthChanged(const FOnAttributeChangeData& Data)
 
 void ATargetDummy::HandleDeath()
 {
-	// TODO: play death anim/VFX/SFX before respawn (Step 4 below)
+	// TODO: play death anim/VFX/SFX before respawn 
 	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
 
 	FTimerHandle RespawnTimer;

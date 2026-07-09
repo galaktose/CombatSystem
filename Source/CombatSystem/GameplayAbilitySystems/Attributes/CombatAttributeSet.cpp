@@ -3,6 +3,7 @@
 
 #include "CombatAttributeSet.h"
 #include "GameplayEffectExtension.h"
+#include "../Characters/CharacterBase.h"
 #include "Net/UnrealNetwork.h"
 
 UCombatAttributeSet::UCombatAttributeSet()
@@ -30,6 +31,10 @@ void UCombatAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		{
 			const float NewHealth = FMath::Clamp(GetHealth() - Damage, 0.f, GetMaxHealth());
 			SetHealth(NewHealth);
+		}
+		if (ACharacterBase* CharTarget = Cast<ACharacterBase>(Data.Target.GetAvatarActor()))
+		{
+			CharTarget->OnHitReceived(Damage, false); // wire bWasCritical through later if needed
 		}
 	}
 }

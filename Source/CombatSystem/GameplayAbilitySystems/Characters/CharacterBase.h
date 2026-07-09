@@ -34,7 +34,10 @@ public:
 		void SetStance(ECombatStance NewStance);                                  
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")                          
-		void ToggleStance();                                                       
+		void ToggleStance();                                           
+		
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+		void OnHitReceived(float DamageAmount, bool bWasCritical);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
