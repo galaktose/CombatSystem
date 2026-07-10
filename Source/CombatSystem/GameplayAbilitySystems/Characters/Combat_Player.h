@@ -13,6 +13,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
 
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void PlayShootAnim();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void PlayReloadAnim();
+
 protected:
 	void Input_Attack();
 	void Input_Aim(bool bStarted);

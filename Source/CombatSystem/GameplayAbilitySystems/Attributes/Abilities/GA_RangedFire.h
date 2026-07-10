@@ -25,5 +25,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float TraceRange = 3000.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	class UAnimMontage* FireMontage;
 	
 };

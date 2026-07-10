@@ -123,6 +123,7 @@ void ACombat_Player::Input_Reload()
 	if (CombatAttributeSet)
 	{
 		CombatAttributeSet->SetCurrentAmmo(CombatAttributeSet->GetMaxAmmo());
+		PlayReloadAnim();
 	}
 }
 

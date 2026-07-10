@@ -4,6 +4,7 @@
 #include "GA_RangedFire.h"
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Combat_Player.h"
 #include "../CombatAttributeSet.h"
 
 UGA_RangedFire::UGA_RangedFire()
@@ -21,10 +22,18 @@ void UGA_RangedFire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		return;
 	}
 
-	// Ammo check happens on the Character side before this ability is activated
+	APlayerController* PC = Cast<APlayerController>(Character->GetController());
+	if (!PC)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	FVector CamLocation;
+	FRotator CamRotation;
+	PC->GetPlayerViewPoint(CamLocation, CamRotation); // matches true camera, so crosshair lines up
 
-	FVector Start = Character->GetPawnViewLocation();
-	FVector End = Start + Character->GetControlRotation().Vector() * TraceRange;
+	FVector Start = CamLocation;
+	FVector End = Start + CamRotation.Vector() * TraceRange;
 
 	FHitResult Hit;
 	TArray<AActor*> ActorsToIgnore;
@@ -33,6 +42,11 @@ void UGA_RangedFire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	bool bHit = UKismetSystemLibrary::LineTraceSingle(
 		Character, Start, End, UEngineTypes::ConvertToTraceType(ECC_Pawn),
 		false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true);
+
+	if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
+	{
+		Player->PlayShootAnim();
+	}
 
 	if (bHit && Hit.GetActor())
 	{
