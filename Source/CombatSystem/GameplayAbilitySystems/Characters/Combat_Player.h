@@ -48,6 +48,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<class UGameplayAbility> RangedFireAbilityClass; 
 
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> SpecialAbilityClass;
+
 	// Combo system
 	int32 MeleeComboCount = 0;
 	FTimerHandle ComboResetTimerHandle;

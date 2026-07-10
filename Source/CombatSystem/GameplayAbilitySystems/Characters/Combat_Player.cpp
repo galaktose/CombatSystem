@@ -28,18 +28,23 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 void ACombat_Player::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+	SetStance(CurrentStance);
 
 	if (!AbilitySystemComponent) return;
 
 	if (MeleeComboAbilityClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Giving Melee Ability"));
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(MeleeComboAbilityClass, 1));
 	}
 
 	if (RangedFireAbilityClass)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(RangedFireAbilityClass, 1));
+	}
+
+	if (SpecialAbilityClass)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(SpecialAbilityClass, 1));
 	}
 
 	// test case
@@ -129,5 +134,21 @@ void ACombat_Player::Input_Reload()
 
 void ACombat_Player::Input_Special()
 {
-	// Special ability
+	UE_LOG(LogTemp, Warning, TEXT("Input_Special called"));
+
+	if (AbilitySystemComponent && SpecialAbilityClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attempting to activate special ability"));
+		bool bActivated = AbilitySystemComponent->TryActivateAbilityByClass(SpecialAbilityClass);
+		UE_LOG(LogTemp, Warning, TEXT("TryActivateAbilityByClass result: %s"), bActivated ? TEXT("SUCCESS") : TEXT("FAILED"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Input_Special bailed - ASC: %s, SpecialAbilityClass: %s"),
+			AbilitySystemComponent ? TEXT("valid") : TEXT("NULL"),
+			SpecialAbilityClass ? TEXT("valid") : TEXT("NULL"));
+	}
+	FGameplayTag CDTag = FGameplayTag::RequestGameplayTag(FName("State.Cooldown.Special"));
+	UE_LOG(LogTemp, Warning, TEXT("Post-activate, has cooldown tag: %s"),
+		AbilitySystemComponent->HasMatchingGameplayTag(CDTag) ? TEXT("YES") : TEXT("NO"));
 }

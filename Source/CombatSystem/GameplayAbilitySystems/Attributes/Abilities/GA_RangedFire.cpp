@@ -4,7 +4,7 @@
 #include "GA_RangedFire.h"
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Combat_Player.h"
+#include "../../Characters/Combat_Player.h"
 #include "../CombatAttributeSet.h"
 
 UGA_RangedFire::UGA_RangedFire()
