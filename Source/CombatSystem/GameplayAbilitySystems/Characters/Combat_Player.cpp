@@ -2,6 +2,7 @@
 #include "Combat_Player.h"
 #include "EnhancedInputComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -67,9 +68,13 @@ void ACombat_Player::PossessedBy(AController* NewController)
 
 void ACombat_Player::Input_ToggleStance()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Input_ToggleStance called"));
+	const FGameplayTag AimTag = FGameplayTag::RequestGameplayTag(FName("State.Aiming"));
+	if (AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(AimTag))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot switch stance while aiming"));
+		return;
+	}
 	ToggleStance(); //Inherited from CharacterBase
-	UE_LOG(LogTemp, Warning, TEXT("Calling OnStanceChanged with stance: %d"), (int32)CurrentStance);
 	OnStanceChanged(CurrentStance);
 	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
 }
@@ -131,11 +136,18 @@ void ACombat_Player::Input_Aim(bool bStarted)
 	UE_LOG(LogTemp, Warning, TEXT("Input_Aim called, bStarted: %s"), bStarted ? TEXT("true") : TEXT("false"));
 
 	FGameplayTag AimTag = FGameplayTag::RequestGameplayTag(FName("State.Aiming"));
-	if (bStarted)
+	if (bStarted) 
+	{
 		AbilitySystemComponent->AddLooseGameplayTag(AimTag);
-	else
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+	else 
+	{
 		AbilitySystemComponent->RemoveLooseGameplayTag(AimTag);
-
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
 	OnAimStateChanged(bStarted);
 }
 
