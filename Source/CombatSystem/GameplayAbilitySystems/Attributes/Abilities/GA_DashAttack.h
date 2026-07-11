@@ -31,5 +31,10 @@ protected:
 	float DashDuration = 0.2f;
 
 	UFUNCTION()
+	void OnDashStartMontageEnded();
+
+	void PerformDashMovement();
+
+	UFUNCTION()
 	void OnDashMontageEnded();
 };
