@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 UGA_DashAttack::UGA_DashAttack()
 {
@@ -55,7 +56,21 @@ void UGA_DashAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 			ApplyDamageToTarget(HitActor, Stats.Damage);
 		}
 	}
-
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	if (DashMontage)
+	{
+		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, DashMontage, 1.f);
+		MontageTask->OnCompleted.AddDynamic(this, &UGA_DashAttack::OnDashMontageEnded);
+		MontageTask->OnInterrupted.AddDynamic(this, &UGA_DashAttack::OnDashMontageEnded);
+		MontageTask->ReadyForActivation();
+	}
+	else
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}
 }
 
+void UGA_DashAttack::OnDashMontageEnded()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}

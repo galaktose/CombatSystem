@@ -43,16 +43,31 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void PlayReloadAnim();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnDeath();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnRespawned();
 	// Last hit target for combo system
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	AActor* LastHitTarget = nullptr;
 
 protected:
+	//handle death and respawn for player
+	bool bIsDead = false;
+	FVector PlayerSpawnOrigin;
+	void HandleDeath();
+	void HandlePlayerRespawn();
+
+	// Input handling functions
 	void Input_Attack();
 	void Input_Aim(bool bStarted);
 	void Input_ToggleStance();
 	void Input_Reload();
 	void Input_Special();
+
+	// Attribute change handlers
 	void HandleHealthAttributeChanged(const FOnAttributeChangeData& Data);
 	void HandleAmmoAttributeChanged(const FOnAttributeChangeData& Data);
 	void HandleCooldownTagChanged(const FGameplayTag Tag, int32 NewCount);

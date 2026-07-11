@@ -27,6 +27,7 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 }
 
 
+
 void ACombat_Player::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -66,6 +67,7 @@ void ACombat_Player::PossessedBy(AController* NewController)
 	}*/
 }
 
+
 void ACombat_Player::Input_ToggleStance()
 {
 	const FGameplayTag AimTag = FGameplayTag::RequestGameplayTag(FName("State.Aiming"));
@@ -78,6 +80,7 @@ void ACombat_Player::Input_ToggleStance()
 	OnStanceChanged(CurrentStance);
 	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
 }
+
 
 void ACombat_Player::Input_Attack()
 {
@@ -120,11 +123,13 @@ void ACombat_Player::Input_Attack()
 
 }
 
+
 void ACombat_Player::ResetCombo()
 {
 	MeleeComboCount = 0;
 	OnComboChanged.Broadcast(MeleeComboCount);
 }
+
 
 void ACombat_Player::Input_Aim(bool bStarted)
 {
@@ -151,6 +156,7 @@ void ACombat_Player::Input_Aim(bool bStarted)
 	OnAimStateChanged(bStarted);
 }
 
+
 void ACombat_Player::Input_Reload()
 {
 	if (CombatAttributeSet)
@@ -159,6 +165,7 @@ void ACombat_Player::Input_Reload()
 		PlayReloadAnim();
 	}
 }
+
 
 void ACombat_Player::Input_Special()
 {
@@ -181,13 +188,20 @@ void ACombat_Player::Input_Special()
 		AbilitySystemComponent->HasMatchingGameplayTag(CDTag) ? TEXT("YES") : TEXT("NO"));
 }
 
+
 void ACombat_Player::HandleHealthAttributeChanged(const FOnAttributeChangeData& Data)
 {
 	if (CombatAttributeSet)
 	{
 		OnHealthChanged.Broadcast(Data.NewValue, CombatAttributeSet->GetMaxHealth());
 	}
+	if (!bIsDead && Data.NewValue <= 0.f)
+	{
+		bIsDead = true;
+		HandleDeath();
+	}
 }
+
 
 void ACombat_Player::HandleAmmoAttributeChanged(const FOnAttributeChangeData& Data)
 {
@@ -197,10 +211,12 @@ void ACombat_Player::HandleAmmoAttributeChanged(const FOnAttributeChangeData& Da
 	}
 }
 
+
 void ACombat_Player::HandleCooldownTagChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
 }
+
 
 FText ACombat_Player::GetSpecialAbilityStatus() const
 {
@@ -218,4 +234,38 @@ FText ACombat_Player::GetSpecialAbilityStatus() const
 	}
 
 	return FText::FromString("Active");
+}
+
+
+void ACombat_Player::HandleDeath()
+{
+	// Disable input during death sequence
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		DisableInput(PC);
+	}
+
+	OnDeath(); // BP plays death animation, ragdoll, fade, etc
+
+	FTimerHandle RespawnTimer;
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &ACombat_Player::HandlePlayerRespawn, 2.5f, false);
+}
+
+void ACombat_Player::HandlePlayerRespawn()
+{
+	SetActorLocation(PlayerSpawnOrigin);
+
+	if (CombatAttributeSet)
+	{
+		CombatAttributeSet->SetHealth(CombatAttributeSet->GetMaxHealth());
+	}
+
+	bIsDead = false;
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		EnableInput(PC);
+	}
+
+	OnRespawned(); // BP can fade camera back in, etc
 }

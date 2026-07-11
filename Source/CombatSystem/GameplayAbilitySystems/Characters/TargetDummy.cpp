@@ -58,9 +58,9 @@ void ATargetDummy::HandleDeath()
 {
 	
 	GetWorldTimerManager().ClearTimer(AttackTimerHandle);
-
+	OnDummyDeath(); // trigger BP event for death animation, effects, etc.
 	FTimerHandle RespawnTimer;
-	GetWorldTimerManager().SetTimer(RespawnTimer, this, &ATargetDummy::Respawn, 1.5f, false);
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &ATargetDummy::Respawn, RespawnDelay, false);
 }
 
 void ATargetDummy::Respawn()
@@ -74,6 +74,8 @@ void ATargetDummy::Respawn()
 	}
 
 	bIsDead = false;
+
+	OnDummyRespawned(); // trigger BP event for respawn animation, effects, etc.
 
 	GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &ATargetDummy::PerformAutoAttack, AttackInterval, true);
 }

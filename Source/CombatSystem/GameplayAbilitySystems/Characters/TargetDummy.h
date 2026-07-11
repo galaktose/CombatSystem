@@ -16,6 +16,11 @@ class COMBATSYSTEM_API ATargetDummy : public ACharacterBase
 
 public:
 	ATargetDummy();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnDummyDeath();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnDummyRespawned();
 
 protected:
 	virtual void BeginPlay() override;
@@ -28,6 +33,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float RespawnRadius = 500.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	float RespawnDelay = 1.5f;
 
 	bool bIsDead = false; //Flag to track if the dummy is dead
 	FTimerHandle AttackTimerHandle;

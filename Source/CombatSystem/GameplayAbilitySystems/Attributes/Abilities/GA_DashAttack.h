@@ -17,6 +17,9 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Special")
+	class UAnimMontage* DashMontage;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Special")
 	FSpecialAbilityStats Stats;
@@ -26,4 +29,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Special")
 	float DashDuration = 0.2f;
+
+	UFUNCTION()
+	void OnDashMontageEnded();
 };
