@@ -5,6 +5,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "../../Characters/Combat_Player.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 UGA_MeleeCombo::UGA_MeleeCombo()
 {
@@ -14,13 +15,36 @@ UGA_MeleeCombo::UGA_MeleeCombo()
 void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	// TriggerEventData->EventTag will carry which combo stage (Ability.Melee.Combo1/2/3) triggered this
+	UE_LOG(LogTemp, Warning, TEXT("ActivateAbility: %s"), *TriggerEventData->EventTag.ToString());
+
 	bool bIsCritical = TriggerEventData &&
 		TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo3"));
 
 	DoMeleeTrace(bIsCritical);
 
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	// Determine which section to play based on the triggering combo tag
+	FName SectionName = NAME_None;
+	if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo1")))
+		SectionName = FName("Combo1");
+	else if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo2")))
+		SectionName = FName("Combo2");
+	else if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo3")))
+		SectionName = FName("Combo3");
+
+	if (ComboMontage && SectionName != NAME_None)
+	{
+		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, ComboMontage, 1.f, SectionName);
+		MontageTask->OnCompleted.AddDynamic(this, &UGA_MeleeCombo::OnComboMontageEnded);
+		MontageTask->OnInterrupted.AddDynamic(this, &UGA_MeleeCombo::OnComboMontageEnded);
+		MontageTask->OnCancelled.AddDynamic(this, &UGA_MeleeCombo::OnComboMontageEnded);
+		MontageTask->ReadyForActivation();
+	}
+	else
+	{
+		// fallback if montage not assigned yet
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}
 }
 
 void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
@@ -65,4 +89,9 @@ void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
 			//UE_LOG(LogTemp, Warning, TEXT("Applied %.1f damage to %s"), Damage, *HitActor->GetName());
 		}
 	}
+}
+
+void UGA_MeleeCombo::OnComboMontageEnded()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
