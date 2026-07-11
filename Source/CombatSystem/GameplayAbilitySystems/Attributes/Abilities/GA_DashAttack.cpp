@@ -47,10 +47,10 @@ void UGA_DashAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 void UGA_DashAttack::OnDashStartMontageEnded()
 {
-	// Wind-up finished - now actually teleport
+	// Wind-up finished, now teleport
 	PerformDashMovement();
 
-	// Play the follow-through section
+	// Play DashFollowThrough section
 	if (DashMontage)
 	{
 		UAbilityTask_PlayMontageAndWait* FollowThroughTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(

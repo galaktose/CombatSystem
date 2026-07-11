@@ -84,16 +84,20 @@ void ACombat_Player::Input_ToggleStance()
 
 void ACombat_Player::Input_Attack()
 {
-	//test case
-	/*if (AbilitySystemComponent && TestAbilityClass)
-	{
-		AbilitySystemComponent->TryActivateAbilityByClass(TestAbilityClass);
-	}*/
-	//UE_LOG(LogTemp, Warning, TEXT("Input_Attack called"));
 	if (CurrentStance == ECombatStance::Melee)
 	{
-		MeleeComboCount = (MeleeComboCount % 3) + 1; // cycles 1,2,3
+		MeleeComboCount = (MeleeComboCount % 3) + 1;
 		OnComboChanged.Broadcast(MeleeComboCount);
+
+		// cancel any currently running melee combo ability before starting the next attack in the sequence
+		if (AbilitySystemComponent && MeleeComboAbilityClass)
+		{
+			FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromClass(MeleeComboAbilityClass);
+			if (Spec && Spec->IsActive())
+			{
+				AbilitySystemComponent->CancelAbilityHandle(Spec->Handle);
+			}
+		}
 
 		FGameplayTag ComboTag = FGameplayTag::RequestGameplayTag(
 			FName(*FString::Printf(TEXT("Ability.Melee.Combo%d"), MeleeComboCount)));

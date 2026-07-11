@@ -5,6 +5,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "../../Characters/Combat_Player.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 UGA_MeleeCombo::UGA_MeleeCombo()
@@ -15,14 +16,11 @@ UGA_MeleeCombo::UGA_MeleeCombo()
 void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ActivateAbility: %s"), *TriggerEventData->EventTag.ToString());
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 
 	bool bIsCritical = TriggerEventData &&
 		TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo3"));
 
-	DoMeleeTrace(bIsCritical);
-
-	// Determine which section to play based on the triggering combo tag
 	FName SectionName = NAME_None;
 	if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo1")))
 		SectionName = FName("Combo1");
@@ -30,6 +28,29 @@ void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		SectionName = FName("Combo2");
 	else if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo3")))
 		SectionName = FName("Combo3");
+
+	//face the camera's yaw direction before attacking
+	if (Character)
+	{
+		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		{
+			FRotator CamRotation = PC->GetControlRotation();
+			FRotator FacingRotation(0.f, CamRotation.Yaw, 0.f); // yaw only
+			Character->SetActorRotation(FacingRotation);
+		}
+	}
+
+	DoMeleeTrace(bIsCritical); // now correctly camera-aligned
+
+	if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
+	{
+		Player->SetAttacking(true);
+		if (StoredMaxWalkSpeed <= 0.f)
+		{
+			StoredMaxWalkSpeed = Player->GetCharacterMovement()->MaxWalkSpeed;
+		}
+		Player->GetCharacterMovement()->MaxWalkSpeed = 0.f;
+	}
 
 	if (ComboMontage && SectionName != NAME_None)
 	{
@@ -42,7 +63,6 @@ void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	}
 	else
 	{
-		// fallback if montage not assigned yet
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}
 }
@@ -93,5 +113,12 @@ void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
 
 void UGA_MeleeCombo::OnComboMontageEnded()
 {
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
+	{
+		Player->SetAttacking(false);
+		//restores movement after combo ends
+		Player->GetCharacterMovement()->MaxWalkSpeed = StoredMaxWalkSpeed;
+	}
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

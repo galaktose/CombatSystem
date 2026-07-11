@@ -31,5 +31,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float TraceRange = 150.f;
 
+	UPROPERTY()
+	class UAbilityTask_PlayMontageAndWait* CurrentMontageTask;
+
+	bool bComboActive = false;
+
+	float StoredMaxWalkSpeed = 500.f;
+
 	void DoMeleeTrace(bool bIsCritical);
 };

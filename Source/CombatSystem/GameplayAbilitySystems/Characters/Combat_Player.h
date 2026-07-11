@@ -34,9 +34,13 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Events")
 	FOnCriticalHitSignature OnCriticalHitLanded;
+
+
 	// Function to get the current status of the special ability
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	FText GetSpecialAbilityStatus() const;
+
+
 	// Blueprint events for playing animations
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void PlayShootAnim();
@@ -49,9 +53,15 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
 	void OnRespawned();
+
+
 	// Last hit target for combo system
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	AActor* LastHitTarget = nullptr;
+
+	// Function to set the attacking state
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetAttacking(bool bAttacking) { bIsAttacking = bAttacking; }
 
 protected:
 	//handle death and respawn for player
@@ -59,6 +69,9 @@ protected:
 	FVector PlayerSpawnOrigin;
 	void HandleDeath();
 	void HandlePlayerRespawn();
+
+	// prevent spamming attack input
+	bool bIsAttacking = false;
 
 	// Input handling functions
 	void Input_Attack();
