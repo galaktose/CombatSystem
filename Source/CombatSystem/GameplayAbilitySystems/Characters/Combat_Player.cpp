@@ -25,6 +25,7 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
+
 void ACombat_Player::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -46,6 +47,16 @@ void ACombat_Player::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(SpecialAbilityClass, 1));
 	}
+	// Register attribute change 
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		UCombatAttributeSet::GetHealthAttribute()).AddUObject(this, &ACombat_Player::HandleHealthAttributeChanged);
+
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		UCombatAttributeSet::GetCurrentAmmoAttribute()).AddUObject(this, &ACombat_Player::HandleAmmoAttributeChanged);
+
+	FGameplayTag CooldownTag = FGameplayTag::RequestGameplayTag(FName("State.Cooldown.Special"));
+	AbilitySystemComponent->RegisterGameplayTagEvent(CooldownTag, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &ACombat_Player::HandleCooldownTagChanged);
 
 	// test case
 	/*if (TestAbilityClass)
@@ -56,7 +67,11 @@ void ACombat_Player::PossessedBy(AController* NewController)
 
 void ACombat_Player::Input_ToggleStance()
 {
-	ToggleStance(); // inherited from ACharacterBase
+	UE_LOG(LogTemp, Warning, TEXT("Input_ToggleStance called"));
+	ToggleStance(); //Inherited from CharacterBase
+	UE_LOG(LogTemp, Warning, TEXT("Calling OnStanceChanged with stance: %d"), (int32)CurrentStance);
+	OnStanceChanged(CurrentStance);
+	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
 }
 
 void ACombat_Player::Input_Attack()
@@ -66,10 +81,11 @@ void ACombat_Player::Input_Attack()
 	{
 		AbilitySystemComponent->TryActivateAbilityByClass(TestAbilityClass);
 	}*/
-	UE_LOG(LogTemp, Warning, TEXT("Input_Attack called"));
+	//UE_LOG(LogTemp, Warning, TEXT("Input_Attack called"));
 	if (CurrentStance == ECombatStance::Melee)
 	{
 		MeleeComboCount = (MeleeComboCount % 3) + 1; // cycles 1,2,3
+		OnComboChanged.Broadcast(MeleeComboCount);
 
 		FGameplayTag ComboTag = FGameplayTag::RequestGameplayTag(
 			FName(*FString::Printf(TEXT("Ability.Melee.Combo%d"), MeleeComboCount)));
@@ -86,8 +102,7 @@ void ACombat_Player::Input_Attack()
 		const FGameplayTag AimTag = FGameplayTag::RequestGameplayTag(FName("State.Aiming"));
 		const bool bHasAimTag = AbilitySystemComponent->HasMatchingGameplayTag(AimTag);
 
-		UE_LOG(LogTemp, Warning, TEXT("Ranged attack attempted, HasAimTag: %s"),
-			bHasAimTag ? TEXT("true") : TEXT("false"));
+		//UE_LOG(LogTemp, Warning, TEXT("Ranged attack attempted, HasAimTag: %s"),bHasAimTag ? TEXT("true") : TEXT("false"));
 
 		if (bHasAimTag &&
 			CombatAttributeSet &&
@@ -103,6 +118,7 @@ void ACombat_Player::Input_Attack()
 void ACombat_Player::ResetCombo()
 {
 	MeleeComboCount = 0;
+	OnComboChanged.Broadcast(MeleeComboCount);
 }
 
 void ACombat_Player::Input_Aim(bool bStarted)
@@ -151,4 +167,43 @@ void ACombat_Player::Input_Special()
 	FGameplayTag CDTag = FGameplayTag::RequestGameplayTag(FName("State.Cooldown.Special"));
 	UE_LOG(LogTemp, Warning, TEXT("Post-activate, has cooldown tag: %s"),
 		AbilitySystemComponent->HasMatchingGameplayTag(CDTag) ? TEXT("YES") : TEXT("NO"));
+}
+
+void ACombat_Player::HandleHealthAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (CombatAttributeSet)
+	{
+		OnHealthChanged.Broadcast(Data.NewValue, CombatAttributeSet->GetMaxHealth());
+	}
+}
+
+void ACombat_Player::HandleAmmoAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	if (CombatAttributeSet)
+	{
+		OnAmmoChanged.Broadcast(Data.NewValue, CombatAttributeSet->GetMaxAmmo());
+	}
+}
+
+void ACombat_Player::HandleCooldownTagChanged(const FGameplayTag Tag, int32 NewCount)
+{
+	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
+}
+
+FText ACombat_Player::GetSpecialAbilityStatus() const
+{
+	if (!AbilitySystemComponent) return FText::FromString("Unknown");
+
+	FGameplayTag CooldownTag = FGameplayTag::RequestGameplayTag(FName("State.Cooldown.Special"));
+	if (AbilitySystemComponent->HasMatchingGameplayTag(CooldownTag))
+	{
+		return FText::FromString("On Cooldown");
+	}
+
+	if (CurrentStance != ECombatStance::Melee)
+	{
+		return FText::FromString("Disabled");
+	}
+
+	return FText::FromString("Active");
 }

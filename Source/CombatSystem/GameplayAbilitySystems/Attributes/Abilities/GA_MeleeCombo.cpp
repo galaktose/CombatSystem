@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "../../Characters/Combat_Player.h"
 
 UGA_MeleeCombo::UGA_MeleeCombo()
 {
@@ -14,7 +15,6 @@ void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	// TriggerEventData->EventTag will carry which combo stage (Ability.Melee.Combo1/2/3) triggered this
-	UE_LOG(LogTemp, Warning, TEXT("ActivateAbility: %s"),*TriggerEventData->EventTag.ToString());
 	bool bIsCritical = TriggerEventData &&
 		TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Melee.Combo3"));
 
@@ -25,7 +25,7 @@ void UGA_MeleeCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
 {
-	UE_LOG(LogTemp, Warning, TEXT("DoMeleeTrace"));
+	//UE_LOG(LogTemp, Warning, TEXT("DoMeleeTrace"));
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (!Character) return;
 
@@ -50,11 +50,19 @@ void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical)
 		if (HitActor && !AlreadyHit.Contains(HitActor))
 		{
 			AlreadyHit.Add(HitActor);
-
 			float Damage = bIsCritical ? BaseDamage * 2.f : BaseDamage;
 			ApplyDamageToTarget(HitActor, Damage);
+			if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
+			{
+				Player->LastHitTarget = HitActor;
 
-			UE_LOG(LogTemp, Warning, TEXT("Applied %.1f damage to %s"), Damage, *HitActor->GetName());
+				if (bIsCritical) // only broadcast when this specific hit was a crit
+				{
+					Player->OnCriticalHitLanded.Broadcast();
+				}
+			}
+
+			//UE_LOG(LogTemp, Warning, TEXT("Applied %.1f damage to %s"), Damage, *HitActor->GetName());
 		}
 	}
 }

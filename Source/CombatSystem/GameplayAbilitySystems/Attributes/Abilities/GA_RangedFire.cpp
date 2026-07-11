@@ -51,7 +51,12 @@ void UGA_RangedFire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	if (bHit && Hit.GetActor())
 	{
 		ApplyDamageToTarget(Hit.GetActor(), BaseDamage);
+		if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
+		{
+			Player->LastHitTarget = Hit.GetActor();
+		}
 	}
+
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
