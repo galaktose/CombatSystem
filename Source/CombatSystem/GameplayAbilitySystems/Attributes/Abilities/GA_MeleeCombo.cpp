@@ -94,7 +94,7 @@ void UGA_MeleeCombo::DoMeleeTrace(bool bIsCritical, int32 ComboStageIndex) // MO
 	UKismetSystemLibrary::SphereTraceMulti(
 		Character, Start, End, TraceRadius,
 		UEngineTypes::ConvertToTraceType(ECC_Pawn),
-		false, ActorsToIgnore, EDrawDebugTrace::ForDuration,
+		false, ActorsToIgnore, EDrawDebugTrace::None,
 		Hits, true);
 
 	TSet<AActor*> AlreadyHit;

@@ -41,7 +41,7 @@ void UGA_RangedFire::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 
 	bool bHit = UKismetSystemLibrary::LineTraceSingle(
 		Character, Start, End, UEngineTypes::ConvertToTraceType(ECC_Pawn),
-		false, ActorsToIgnore, EDrawDebugTrace::ForDuration, Hit, true);
+		false, ActorsToIgnore, EDrawDebugTrace::None, Hit, true);
 
 	if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
 	{

@@ -86,7 +86,7 @@ void UGA_DashAttack::PerformDashMovement()
 		UEngineTypes::ConvertToTraceType(ECC_Visibility),
 		false,
 		Ignore,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		TraceHit,
 		true);
 
@@ -96,7 +96,7 @@ void UGA_DashAttack::PerformDashMovement()
 	UKismetSystemLibrary::SphereTraceMulti(
 		Character, StartLocation, FinalLocation, 80.f,
 		UEngineTypes::ConvertToTraceType(ECC_Pawn),
-		false, Ignore, EDrawDebugTrace::ForDuration, DamageHits, true);
+		false, Ignore, EDrawDebugTrace::None, DamageHits, true);
 
 	TSet<AActor*> AlreadyHit;
 	for (const FHitResult& Hit : DamageHits)

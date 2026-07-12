@@ -51,7 +51,7 @@ void UGA_DummyAOESweep::OnHitWindowReceived(FGameplayEventData Payload)
 	UKismetSystemLibrary::SphereTraceMulti(
 		Avatar, Avatar->GetActorLocation(), Avatar->GetActorLocation(), Radius,
 		UEngineTypes::ConvertToTraceType(ECC_Pawn), false, Ignore,
-		EDrawDebugTrace::ForDuration, Hits, true);
+		EDrawDebugTrace::None, Hits, true);
 
 	TSet<AActor*> AlreadyHit;
 	for (const FHitResult& Hit : Hits)
