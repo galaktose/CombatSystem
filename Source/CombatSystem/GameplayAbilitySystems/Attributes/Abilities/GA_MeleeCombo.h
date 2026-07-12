@@ -22,6 +22,7 @@ protected:
 	UFUNCTION()
 	void OnComboMontageEnded();
 
+	// Damage and trace parameters for the melee combo
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float BaseDamage = 10.f;
 
@@ -31,12 +32,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float TraceRange = 150.f;
 
+	// Sound effects for combo hits and misses
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TArray<class USoundBase*> ComboHitSounds; // index 0 = Combo1 hit, 1 = Combo2 hit, 2 = Combo3 hit
+
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TArray<class USoundBase*> ComboMissSounds; 
+
+	// Current montage task for the combo
 	UPROPERTY()
 	class UAbilityTask_PlayMontageAndWait* CurrentMontageTask;
-
 	bool bComboActive = false;
 
 	float StoredMaxWalkSpeed = 500.f;
 
-	void DoMeleeTrace(bool bIsCritical);
+	void DoMeleeTrace(bool bIsCritical, int32 ComboStageIndex);
 };
