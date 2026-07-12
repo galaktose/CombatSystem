@@ -24,6 +24,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly) float Damage = 10.f;
 	UPROPERTY(EditDefaultsOnly) float Radius = 300.f;
 
+	UPROPERTY()
+	class UAbilityTask_WaitGameplayEvent* WaitHitWindowTask;
+
+	UFUNCTION()
+	void OnHitWindowReceived(FGameplayEventData Payload);
+
 	UFUNCTION()
 	void OnAttackMontageEnded();
 };
