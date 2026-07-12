@@ -63,6 +63,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SetAttacking(bool bAttacking) { bIsAttacking = bAttacking; }
 
+	// Function to handle reload animation 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void OnReloadAnimComplete();
+
 protected:
 	//handle death and respawn for player
 	bool bIsDead = false;
@@ -72,6 +76,9 @@ protected:
 
 	// prevent spamming attack input
 	bool bIsAttacking = false;
+	float LastAttackInputTime = 0.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	float AttackInputCooldown = 0.5f;
 
 	// Input handling functions
 	void Input_Attack();
@@ -119,4 +126,7 @@ protected:
 	int32 MeleeComboCount = 0;
 	FTimerHandle ComboResetTimerHandle;
 	void ResetCombo();
+
+	// Reloading state (to prevent firing successive reloading)
+	bool bIsReloading = false;
 };

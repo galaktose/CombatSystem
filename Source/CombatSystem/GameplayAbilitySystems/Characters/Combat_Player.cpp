@@ -86,6 +86,13 @@ void ACombat_Player::Input_Attack()
 {
 	if (CurrentStance == ECombatStance::Melee)
 	{
+		float CurrentTime = GetWorld()->GetTimeSeconds();
+		if (CurrentTime - LastAttackInputTime < AttackInputCooldown)
+		{
+			return;
+		}
+		LastAttackInputTime = CurrentTime;
+
 		MeleeComboCount = (MeleeComboCount % 3) + 1;
 		OnComboChanged.Broadcast(MeleeComboCount);
 
@@ -163,13 +170,37 @@ void ACombat_Player::Input_Aim(bool bStarted)
 
 void ACombat_Player::Input_Reload()
 {
+	// block reload outside Ranged stance
+	if (CurrentStance != ECombatStance::Ranged)
+	{
+		return;
+	}
+
+	// block reload if already reloading
+	if (bIsReloading)
+	{
+		return;
+	}
+
+	// block reload if already at max ammo
+	if (CombatAttributeSet && CombatAttributeSet->GetCurrentAmmo() >= CombatAttributeSet->GetMaxAmmo())
+	{
+		return;
+	}
+
+	bIsReloading = true; 
+
+	PlayReloadAnim();
+}
+
+void ACombat_Player::OnReloadAnimComplete()
+{
 	if (CombatAttributeSet)
 	{
 		CombatAttributeSet->SetCurrentAmmo(CombatAttributeSet->GetMaxAmmo());
-		PlayReloadAnim();
 	}
+	bIsReloading = false; 
 }
-
 
 void ACombat_Player::Input_Special()
 {
