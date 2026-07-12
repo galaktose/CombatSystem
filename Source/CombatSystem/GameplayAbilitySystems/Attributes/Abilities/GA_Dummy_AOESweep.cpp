@@ -3,6 +3,7 @@
 
 #include "GA_Dummy_AOESweep.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 void UGA_DummyAOESweep::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -27,5 +28,21 @@ void UGA_DummyAOESweep::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			ApplyDamageToTarget(Hit.GetActor(), Damage);
 		}
 	}
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	if (AttackMontage)
+	{
+		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, AttackMontage, 1.f);
+		MontageTask->OnCompleted.AddDynamic(this, &UGA_DummyAOESweep::OnAttackMontageEnded);
+		MontageTask->OnInterrupted.AddDynamic(this, &UGA_DummyAOESweep::OnAttackMontageEnded);
+		MontageTask->ReadyForActivation();
+	}
+	else
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}
+}
+
+void UGA_DummyAOESweep::OnAttackMontageEnded()
+{
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

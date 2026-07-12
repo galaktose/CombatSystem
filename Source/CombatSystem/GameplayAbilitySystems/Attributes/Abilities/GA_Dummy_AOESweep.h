@@ -17,7 +17,13 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	class UAnimMontage* AttackMontage;
+
 protected:
 	UPROPERTY(EditDefaultsOnly) float Damage = 10.f;
 	UPROPERTY(EditDefaultsOnly) float Radius = 300.f;
+
+	UFUNCTION()
+	void OnAttackMontageEnded();
 };
