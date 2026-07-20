@@ -86,6 +86,9 @@ protected:
 	void Input_ToggleStance();
 	void Input_Reload();
 	void Input_Special();
+	void Input_HoldAttack();
+	void Input_HoldReleased();
+	void Input_OmniSlash();
 
 	// Attribute change handlers
 	void HandleHealthAttributeChanged(const FOnAttributeChangeData& Data);
@@ -106,6 +109,8 @@ protected:
 	class UInputAction* IA_Reload;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Special;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Special2;
 
 	//Ability Classes
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
@@ -129,4 +134,7 @@ protected:
 
 	// Reloading state (to prevent firing successive reloading)
 	bool bIsReloading = false;
+
+	// Hold attack state (Special2 Knock Up ability)
+	bool bHoldAttackTriggered = false;
 };

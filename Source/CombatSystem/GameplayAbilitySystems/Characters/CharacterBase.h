@@ -50,4 +50,11 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	// Airborne fall handling
+	bool bIsAirborne = false;
+	FTimerHandle AirborneFallTimer;
+
+	void StartAirborneFallTimer(float Duration);
+	virtual void HandleAirborneFall();
+
 };

@@ -11,7 +11,11 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (IA_Attack)
+		{
 			EIC->BindAction(IA_Attack, ETriggerEvent::Started, this, &ACombat_Player::Input_Attack);
+			EIC->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &ACombat_Player::Input_HoldAttack);
+			EIC->BindAction(IA_Attack, ETriggerEvent::Completed, this, &ACombat_Player::Input_HoldReleased);
+		}
 		if (IA_Aim)
 		{
 			EIC->BindAction(IA_Aim, ETriggerEvent::Started, this, &ACombat_Player::Input_Aim, true);
@@ -23,6 +27,8 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 			EIC->BindAction(IA_Reload, ETriggerEvent::Started, this, &ACombat_Player::Input_Reload);
 		if (IA_Special)
 			EIC->BindAction(IA_Special, ETriggerEvent::Started, this, &ACombat_Player::Input_Special);
+		if (IA_Special2)
+			EIC->BindAction(IA_Special2, ETriggerEvent::Started, this, &ACombat_Player::Input_OmniSlash);
 	}
 }
 
@@ -223,6 +229,26 @@ void ACombat_Player::Input_Special()
 		AbilitySystemComponent->HasMatchingGameplayTag(CDTag) ? TEXT("YES") : TEXT("NO"));
 }
 
+void ACombat_Player::Input_HoldAttack()
+{
+	if (bHoldAttackTriggered) return; // only fire once per hold
+	bHoldAttackTriggered = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("Input_HoldAttack triggered")); // log message
+
+	// Launcher ability activation here
+}
+
+void ACombat_Player::Input_HoldReleased()
+{
+	bHoldAttackTriggered = false;
+	UE_LOG(LogTemp, Warning, TEXT("Input_HoldReleased triggered"));
+}
+
+void ACombat_Player::Input_OmniSlash()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Input_OmniSlash triggered"));
+}
 
 void ACombat_Player::HandleHealthAttributeChanged(const FOnAttributeChangeData& Data)
 {

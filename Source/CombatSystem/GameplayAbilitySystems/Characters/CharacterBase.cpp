@@ -89,3 +89,14 @@ void ACharacterBase::ToggleStance()
 {
 	SetStance(CurrentStance == ECombatStance::Melee ? ECombatStance::Ranged : ECombatStance::Melee);
 }
+
+void ACharacterBase::StartAirborneFallTimer(float Duration)
+{
+	// Start a timer to handle airborne fall after a specified duration
+}
+
+void ACharacterBase::HandleAirborneFall()
+{
+	// Handle the logic for when the character has been airborne for too long
+}
+
