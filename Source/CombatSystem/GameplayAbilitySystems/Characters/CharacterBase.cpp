@@ -114,10 +114,12 @@ void ACharacterBase::HandleAirborneFall()
 {
 	SetAirborne(false);
 	GetWorldTimerManager().ClearTimer(AirborneFallTimer);
-	OnAirborneFall(); //BP hook for landing animation or sfx
-}
 
-void ACharacterBase::OnAirborneFall()
-{
-	// later add landing animation or sfx here
+	if (ACharacter* Character = Cast<ACharacter>(this))
+	{
+		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		Character->GetCharacterMovement()->MaxFlySpeed = 600.f;
+	}
+
+	OnAirborneFall(); //BP hook for landing animation or sfx
 }

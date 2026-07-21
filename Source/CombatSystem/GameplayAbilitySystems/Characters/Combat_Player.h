@@ -119,9 +119,10 @@ protected:
 	TSubclassOf<class UGameplayAbility> MeleeComboAbilityClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<class UGameplayAbility> RangedFireAbilityClass; 
-
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<class UGameplayAbility> SpecialAbilityClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> ChargedAttackAbilityClass;
 
 	// Stance change event
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")

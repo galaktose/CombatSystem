@@ -55,6 +55,10 @@ void ACombat_Player::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(SpecialAbilityClass, 1));
 	}
+	if (ChargedAttackAbilityClass)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(ChargedAttackAbilityClass, 1));
+	}
 	// Register attribute change 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		UCombatAttributeSet::GetHealthAttribute()).AddUObject(this, &ACombat_Player::HandleHealthAttributeChanged);
@@ -231,12 +235,13 @@ void ACombat_Player::Input_Special()
 
 void ACombat_Player::Input_HoldAttack()
 {
-	if (bHoldAttackTriggered) return; // only fire once per hold
+	if (bHoldAttackTriggered) return;
 	bHoldAttackTriggered = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("Input_HoldAttack triggered")); // log message
-
-	// Launcher ability activation here
+	if (CurrentStance == ECombatStance::Melee && AbilitySystemComponent && ChargedAttackAbilityClass)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(ChargedAttackAbilityClass);
+	}
 }
 
 void ACombat_Player::Input_HoldReleased()
