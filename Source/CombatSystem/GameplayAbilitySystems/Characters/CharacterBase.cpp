@@ -90,13 +90,33 @@ void ACharacterBase::ToggleStance()
 	SetStance(CurrentStance == ECombatStance::Melee ? ECombatStance::Ranged : ECombatStance::Melee);
 }
 
+void ACharacterBase::SetAirborne(bool bAirborne)
+{
+	bIsAirborne = bAirborne;
+
+	FGameplayTag AirborneTag = FGameplayTag::RequestGameplayTag(FName("State.Airborne"));
+	if (AbilitySystemComponent)
+	{
+		if (bAirborne)
+			AbilitySystemComponent->AddLooseGameplayTag(AirborneTag);
+		else
+			AbilitySystemComponent->RemoveLooseGameplayTag(AirborneTag);
+	}
+}
+
 void ACharacterBase::StartAirborneFallTimer(float Duration)
 {
-	// Start a timer to handle airborne fall after a specified duration
+	GetWorldTimerManager().ClearTimer(AirborneFallTimer);
+	GetWorldTimerManager().SetTimer(AirborneFallTimer, this, &ACharacterBase::HandleAirborneFall, Duration, false);
 }
 
 void ACharacterBase::HandleAirborneFall()
 {
-	// Handle the logic for when the character has been airborne for too long
+	SetAirborne(false);
+	GetWorldTimerManager().ClearTimer(AirborneFallTimer);
+	OnAirborneFall(); //BP hook for landing animation or sfx
 }
 
+void ACharacterBase::OnAirborneFall()
+{
+	// later add landing animation or sfx here

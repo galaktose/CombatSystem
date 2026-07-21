@@ -37,7 +37,17 @@ public:
 		void ToggleStance();                                           
 		
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
-		void OnHitReceived(float DamageAmount, bool bWasCritical);
+	void OnHitReceived(float DamageAmount, bool bWasCritical);
+
+	// Airborne state handling
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bIsAirborne = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetAirborne(bool bAirborne);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
+	void OnAirborneFall(); // for landing animation or sfx
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
@@ -51,9 +61,9 @@ protected:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// Airborne fall handling
-	bool bIsAirborne = false;
 	FTimerHandle AirborneFallTimer;
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void StartAirborneFallTimer(float Duration);
 	virtual void HandleAirborneFall();
 
