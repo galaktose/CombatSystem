@@ -120,3 +120,4 @@ void ACharacterBase::HandleAirborneFall()
 void ACharacterBase::OnAirborneFall()
 {
 	// later add landing animation or sfx here
+}
