@@ -38,6 +38,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float AirborneFallResetDuration = 3.f; // matches your existing AirborneFallDelay
 
+	UPROPERTY()
+	class UAbilityTask_WaitGameplayEvent* WaitSlamTriggerTask;
+
+	UFUNCTION()
+	void OnSlamTriggerReceived(FGameplayEventData Payload);
+
+	// cache whats needed to perform the slam once the notify fires
+	TWeakObjectPtr<AActor> CachedSlamTarget;
+
 	void DoAirTrace(bool bIsSlam);
 
 	UFUNCTION()

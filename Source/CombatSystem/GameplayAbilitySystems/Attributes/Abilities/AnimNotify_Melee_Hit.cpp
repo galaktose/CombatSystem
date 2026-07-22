@@ -10,8 +10,7 @@ void UAnimNotify_Melee_Hit::Notify(USkeletalMeshComponent* MeshComp, UAnimSequen
 	if (AActor* Owner = MeshComp->GetOwner())
 	{
 		FGameplayEventData EventData;
-		FGameplayTag EventTag = FGameplayTag::RequestGameplayTag(FName("Event.Melee.HitWindow"));
-		EventData.EventTag = EventTag;
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Owner, EventTag, EventData);
+		EventData.EventTag = EventTagToSend; // now configurable per notify instance instead of hardcoded
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Owner, EventTagToSend, EventData);
 	}
 }

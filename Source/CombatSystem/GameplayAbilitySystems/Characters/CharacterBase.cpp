@@ -109,6 +109,7 @@ void ACharacterBase::StartAirborneFallTimer(float Duration)
 {
 	GetWorldTimerManager().ClearTimer(AirborneFallTimer);
 	GetWorldTimerManager().SetTimer(AirborneFallTimer, this, &ACharacterBase::HandleAirborneFall, Duration, false);
+	UE_LOG(LogTemp, Warning, TEXT("Airborne fall timer started for %f seconds"), Duration);
 }
 
 void ACharacterBase::HandleAirborneFall()

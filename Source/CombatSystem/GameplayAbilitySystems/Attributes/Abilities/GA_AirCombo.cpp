@@ -7,6 +7,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "../../Characters/Combat_Player.h"
 
 UGA_AirCombo::UGA_AirCombo()
@@ -18,11 +19,6 @@ UGA_AirCombo::UGA_AirCombo()
 void UGA_AirCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	if (!TriggerEventData)
-	{
-		UE_LOG(LogTemp, Error, TEXT("TriggerEventData is null"));
-		return;
-	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Air Combo Event: %s"),
 		*TriggerEventData->EventTag.ToString());
@@ -39,10 +35,17 @@ void UGA_AirCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	else if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Air.Combo3")))
 		SectionName = FName("AirCombo3");
 	else if (TriggerEventData->EventTag == FGameplayTag::RequestGameplayTag(FName("Ability.Air.Combo4")))
-		SectionName = FName("AirCombo4_Slam");
+		SectionName = FName("AirCombo4");
 
 	DoAirTrace(bIsSlam);
 
+	if (bIsSlam)
+	{
+		WaitSlamTriggerTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+			this, FGameplayTag::RequestGameplayTag(FName("Event.Air.SlamTrigger")));
+		WaitSlamTriggerTask->EventReceived.AddDynamic(this, &UGA_AirCombo::OnSlamTriggerReceived);
+		WaitSlamTriggerTask->ReadyForActivation();
+	}
 	if (AirComboMontage && SectionName != NAME_None)
 	{
 		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
@@ -60,7 +63,6 @@ void UGA_AirCombo::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 void UGA_AirCombo::DoAirTrace(bool bIsSlam)
 {
-	UE_LOG(LogTemp, Warning, TEXT("DoAirTrace called"));
 	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
 	if (!Character) return;
 
@@ -74,12 +76,12 @@ void UGA_AirCombo::DoAirTrace(bool bIsSlam)
 	UKismetSystemLibrary::SphereTraceMulti(
 		Character, Start, End, TraceRadius,
 		UEngineTypes::ConvertToTraceType(ECC_Pawn),
-		false, Ignore, EDrawDebugTrace::ForDuration, Hits, true);
+		false, Ignore, EDrawDebugTrace::None, Hits, true);
 
 	TSet<AActor*> AlreadyHit;
 	for (const FHitResult& Hit : Hits)
 	{
-		AActor* HitActor = Hit.GetActor(); 
+		AActor* HitActor = Hit.GetActor();
 		if (HitActor && !AlreadyHit.Contains(HitActor))
 		{
 			AlreadyHit.Add(HitActor);
@@ -87,11 +89,12 @@ void UGA_AirCombo::DoAirTrace(bool bIsSlam)
 			float Damage = bIsSlam ? BaseDamage * SlamDamageMultiplier : BaseDamage;
 			ApplyDamageToTarget(HitActor, Damage);
 
-			if (ACharacterBase* TargetBase = Cast<ACharacterBase>(HitActor)) 
+			if (ACharacterBase* TargetBase = Cast<ACharacterBase>(HitActor))
 			{
 				if (bIsSlam)
 				{
-					TargetBase->HandleAirborneFall();
+					// cache the target for the slam ability to handle later
+					CachedSlamTarget = HitActor;
 				}
 				else
 				{
@@ -99,14 +102,28 @@ void UGA_AirCombo::DoAirTrace(bool bIsSlam)
 				}
 			}
 		}
-	} 
+	}
+}
 
-	// Player-side slam handling
-	if (bIsSlam)
+void UGA_AirCombo::OnSlamTriggerReceived(FGameplayEventData Payload)
+{
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (!Character) return;
+
+	// Move the player down instantly
+	if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
 	{
-		if (ACombat_Player* Player = Cast<ACombat_Player>(Character))
+		Player->LaunchCharacter(FVector(0.f, 0.f, -2500.f), false, true);
+		Player->HandleAirborneFall();
+	}
+
+	// Move the cached target down instantly too
+	if (CachedSlamTarget.IsValid())
+	{
+		if (ACharacterBase* TargetBase = Cast<ACharacterBase>(CachedSlamTarget.Get()))
 		{
-			Player->HandleAirborneFall();
+			TargetBase->LaunchCharacter(FVector(0.f, 0.f, -2500.f), false, true);
+			TargetBase->HandleAirborneFall();
 		}
 	}
 }
