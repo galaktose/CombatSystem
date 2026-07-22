@@ -36,6 +36,7 @@ void UCombatAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 				if (NewHealth > 0.f)
 				{
 					CharTarget->OnHitReceived(Damage, false);
+					CharTarget->InterruptAirborneAction();
 				}
 			}
 		}

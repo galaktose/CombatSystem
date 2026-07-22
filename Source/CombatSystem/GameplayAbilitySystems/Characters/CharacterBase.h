@@ -52,6 +52,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void StartAirborneFallTimer(float Duration);
 
+	virtual void HandleAirborneFall();
+	virtual void InterruptAirborneAction();
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AbilitySystem")
 	EGameplayEffectReplicationMode ReplicationMode = EGameplayEffectReplicationMode::Mixed;
@@ -65,6 +67,6 @@ protected:
 
 	// Airborne fall handling
 	FTimerHandle AirborneFallTimer;
-	virtual void HandleAirborneFall();
+	
 
 };

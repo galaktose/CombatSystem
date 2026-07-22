@@ -2,6 +2,7 @@
 #include "CharacterBase.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Combat_Player.h"
 #include "GameplayTagContainer.h"
 
 ACharacterBase::ACharacterBase()
@@ -120,6 +121,17 @@ void ACharacterBase::HandleAirborneFall()
 		Character->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		Character->GetCharacterMovement()->MaxFlySpeed = 600.f;
 	}
-
+	if (ACombat_Player* Player = Cast<ACombat_Player>(this))
+	{
+		Player->ResetAirCombo();
+	}
 	OnAirborneFall(); //BP hook for landing animation or sfx
+}
+
+void ACharacterBase::InterruptAirborneAction()
+{
+	if (bIsAirborne)
+	{
+		HandleAirborneFall();
+	}
 }

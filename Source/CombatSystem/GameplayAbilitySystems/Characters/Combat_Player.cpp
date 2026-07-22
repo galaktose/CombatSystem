@@ -58,6 +58,10 @@ void ACombat_Player::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(ChargedAttackAbilityClass, 1));
 	}
+	if (AirComboAbilityClass)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AirComboAbilityClass, 1));
+	}
 	// Register attribute change 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		UCombatAttributeSet::GetHealthAttribute()).AddUObject(this, &ACombat_Player::HandleHealthAttributeChanged);
@@ -92,14 +96,29 @@ void ACombat_Player::Input_ToggleStance()
 
 void ACombat_Player::Input_Attack_Tap()
 {
-	/*if (bIsAirborne)
+	if (bIsAirborne && CurrentStance == ECombatStance::Melee)
 	{
+		AirComboCount = (AirComboCount % 4) + 1; // cycles 1,2,3,4
+
+		// Cancel any in-progress air combo ability so the new stage can start immediately
 		if (AbilitySystemComponent && AirComboAbilityClass)
 		{
-			AbilitySystemComponent->TryActivateAbilityByClass(AirComboAbilityClass);
+			FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromClass(AirComboAbilityClass);
+			if (Spec && Spec->IsActive())
+			{
+				AbilitySystemComponent->CancelAbilityHandle(Spec->Handle);
+			}
 		}
+
+		FGameplayTag AirComboTag = FGameplayTag::RequestGameplayTag(
+			FName(*FString::Printf(TEXT("Ability.Air.Combo%d"), AirComboCount)));
+
+		FGameplayEventData EventData;
+		EventData.EventTag = AirComboTag;
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, AirComboTag, EventData);
+
 		return;
-	}*/
+	}
 
 	if (CurrentStance == ECombatStance::Melee)
 	{
@@ -159,6 +178,25 @@ void ACombat_Player::Input_Attack_Hold()
 	{
 		AbilitySystemComponent->TryActivateAbilityByClass(ChargedAttackAbilityClass);
 	}
+}
+
+void ACombat_Player::InterruptAirborneAction()
+{
+	Super::InterruptAirborneAction(); // handles the fall/state-clear via HandleAirborneFall
+
+	if (AbilitySystemComponent && AirComboAbilityClass)
+	{
+		FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromClass(AirComboAbilityClass);
+		if (Spec && Spec->IsActive())
+		{
+			AbilitySystemComponent->CancelAbilityHandle(Spec->Handle);
+		}
+	}
+}
+
+void ACombat_Player::ResetAirCombo()
+{
+	AirComboCount = 0;
 }
 
 void ACombat_Player::ResetCombo()

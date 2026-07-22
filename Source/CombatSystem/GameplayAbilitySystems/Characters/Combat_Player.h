@@ -67,6 +67,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void OnReloadAnimComplete();
 
+
+	void ResetAirCombo();
+
 protected:
 	//handle death and respawn for player
 	bool bIsDead = false;
@@ -125,6 +128,8 @@ protected:
 	TSubclassOf<class UGameplayAbility> SpecialAbilityClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<class UGameplayAbility> ChargedAttackAbilityClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> AirComboAbilityClass;
 
 	// Stance change event
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
@@ -140,4 +145,8 @@ protected:
 
 	// Charged attack trigger state (to prevent multiple triggers in a single input)
 	bool bChargedAttackTriggered = false;
+
+	int32 AirComboCount = 0;
+	virtual void InterruptAirborneAction() override;
+
 };
