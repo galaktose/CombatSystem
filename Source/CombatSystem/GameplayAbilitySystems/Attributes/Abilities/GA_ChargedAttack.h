@@ -39,6 +39,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float AirborneFallDelay = 3.f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	float LaunchVelocityZ = 1200.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	float RiseDuration = 0.3f; // how long the target visibly rises before freezing airborne
+
+	TWeakObjectPtr<ACharacter> CachedPlayerCharacter;
+	TWeakObjectPtr<ACharacter> CachedTargetCharacter;
+
+	UFUNCTION()
+	void OnRiseDelayFinished();
+
 	UFUNCTION()
 	void OnLaunchMontageEnded();
 

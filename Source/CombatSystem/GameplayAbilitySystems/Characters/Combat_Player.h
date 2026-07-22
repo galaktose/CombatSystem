@@ -81,14 +81,14 @@ protected:
 	float AttackInputCooldown = 0.5f;
 
 	// Input handling functions
-	void Input_Attack();
 	void Input_Aim(bool bStarted);
 	void Input_ToggleStance();
 	void Input_Reload();
 	void Input_Special();
-	void Input_HoldAttack();
-	void Input_HoldReleased();
 	void Input_OmniSlash();
+	void Input_Attack_Tap();
+	void Input_Attack_Hold();
+	void Input_Attack_Hold_Released();
 
 	// Attribute change handlers
 	void HandleHealthAttributeChanged(const FOnAttributeChangeData& Data);
@@ -100,7 +100,9 @@ protected:
 
 	// Input Actions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Attack;
+	class UInputAction* IA_Attack_Tap; 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Attack_Hold;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Aim;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -136,6 +138,6 @@ protected:
 	// Reloading state (to prevent firing successive reloading)
 	bool bIsReloading = false;
 
-	// Hold attack state (Special2 Knock Up ability)
-	bool bHoldAttackTriggered = false;
+	// Charged attack trigger state (to prevent multiple triggers in a single input)
+	bool bChargedAttackTriggered = false;
 };

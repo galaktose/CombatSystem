@@ -10,12 +10,11 @@ void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		if (IA_Attack)
-		{
-			EIC->BindAction(IA_Attack, ETriggerEvent::Started, this, &ACombat_Player::Input_Attack);
-			EIC->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &ACombat_Player::Input_HoldAttack);
-			EIC->BindAction(IA_Attack, ETriggerEvent::Completed, this, &ACombat_Player::Input_HoldReleased);
-		}
+		if (IA_Attack_Tap)
+			EIC->BindAction(IA_Attack_Tap, ETriggerEvent::Triggered, this, &ACombat_Player::Input_Attack_Tap);
+		if (IA_Attack_Hold)
+			EIC->BindAction(IA_Attack_Hold, ETriggerEvent::Triggered, this, &ACombat_Player::Input_Attack_Hold);
+		EIC->BindAction(IA_Attack_Hold, ETriggerEvent::Completed, this, &ACombat_Player::Input_Attack_Hold_Released);
 		if (IA_Aim)
 		{
 			EIC->BindAction(IA_Aim, ETriggerEvent::Started, this, &ACombat_Player::Input_Aim, true);
@@ -91,9 +90,17 @@ void ACombat_Player::Input_ToggleStance()
 	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
 }
 
-
-void ACombat_Player::Input_Attack()
+void ACombat_Player::Input_Attack_Tap()
 {
+	/*if (bIsAirborne)
+	{
+		if (AbilitySystemComponent && AirComboAbilityClass)
+		{
+			AbilitySystemComponent->TryActivateAbilityByClass(AirComboAbilityClass);
+		}
+		return;
+	}*/
+
 	if (CurrentStance == ECombatStance::Melee)
 	{
 		float CurrentTime = GetWorld()->GetTimeSeconds();
@@ -141,14 +148,28 @@ void ACombat_Player::Input_Attack()
 			CombatAttributeSet->SetCurrentAmmo(CombatAttributeSet->GetCurrentAmmo() - 1.f);
 		}
 	}
-
 }
 
+void ACombat_Player::Input_Attack_Hold()
+{
+	if (bChargedAttackTriggered) return; // charge attack once per hold
+	bChargedAttackTriggered = true;
+
+	if (CurrentStance == ECombatStance::Melee && !bIsAirborne && AbilitySystemComponent && ChargedAttackAbilityClass)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(ChargedAttackAbilityClass);
+	}
+}
 
 void ACombat_Player::ResetCombo()
 {
 	MeleeComboCount = 0;
 	OnComboChanged.Broadcast(MeleeComboCount);
+}
+
+void ACombat_Player::Input_Attack_Hold_Released()
+{
+	bChargedAttackTriggered = false; // reset for next hold
 }
 
 
@@ -231,23 +252,6 @@ void ACombat_Player::Input_Special()
 	FGameplayTag CDTag = FGameplayTag::RequestGameplayTag(FName("State.Cooldown.Special"));
 	UE_LOG(LogTemp, Warning, TEXT("Post-activate, has cooldown tag: %s"),
 		AbilitySystemComponent->HasMatchingGameplayTag(CDTag) ? TEXT("YES") : TEXT("NO"));
-}
-
-void ACombat_Player::Input_HoldAttack()
-{
-	if (bHoldAttackTriggered) return;
-	bHoldAttackTriggered = true;
-
-	if (CurrentStance == ECombatStance::Melee && AbilitySystemComponent && ChargedAttackAbilityClass)
-	{
-		AbilitySystemComponent->TryActivateAbilityByClass(ChargedAttackAbilityClass);
-	}
-}
-
-void ACombat_Player::Input_HoldReleased()
-{
-	bHoldAttackTriggered = false;
-	UE_LOG(LogTemp, Warning, TEXT("Input_HoldReleased triggered"));
 }
 
 void ACombat_Player::Input_OmniSlash()

@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "../../Characters/Combat_Player.h"
 
 UGA_ChargedAttack::UGA_ChargedAttack()
@@ -24,7 +25,6 @@ void UGA_ChargedAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		return;
 	}
 
-	// Face camera direction, same as melee combo
 	if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 	{
 		FRotator CamRotation = PC->GetControlRotation();
@@ -41,13 +41,10 @@ void UGA_ChargedAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	UKismetSystemLibrary::SphereTraceMulti(
 		Character, Start, End, TraceRadius,
 		UEngineTypes::ConvertToTraceType(ECC_Pawn),
-		false, Ignore, EDrawDebugTrace::ForDuration, Hits, true);
+		false, Ignore, EDrawDebugTrace::None, Hits, true);
 
 	TSet<AActor*> AlreadyHit;
 	bool bAnyHitLanded = false;
-
-	FVector TargetFinalLocation = FVector::ZeroVector; // hold the target's actual z position
-	bool bHasTargetLocation = false;
 
 	for (const FHitResult& Hit : Hits)
 	{
@@ -56,7 +53,6 @@ void UGA_ChargedAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		{
 			AlreadyHit.Add(HitActor);
 			bAnyHitLanded = true;
-
 			ApplyDamageToTarget(HitActor, Damage);
 
 			if (ACharacterBase* TargetBase = Cast<ACharacterBase>(HitActor))
@@ -66,45 +62,67 @@ void UGA_ChargedAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 				if (ACharacter* TargetChar = Cast<ACharacter>(HitActor))
 				{
-					TargetChar->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-					TargetChar->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-					TargetChar->GetCharacterMovement()->MaxFlySpeed = 0.f;
-
-					FVector TargetNewLocation = TargetChar->GetActorLocation() + FVector(0.f, 0.f, PopUpHeight);
-					TargetChar->SetActorLocation(TargetNewLocation, true);
-
-					TargetFinalLocation = TargetNewLocation; // capture where the target actually ended up
-					bHasTargetLocation = true; // ADDED
+					// launch the target into the air
+					TargetChar->LaunchCharacter(FVector(0.f, 0.f, LaunchVelocityZ), true, true);
+					CachedTargetCharacter = TargetChar; 
 				}
 			}
 		}
 	}
 
-	if (bAnyHitLanded)
+	CachedPlayerCharacter = Character; // ADDED
+
+	if (LaunchMontage)
 	{
-		if (ACharacterBase* PlayerBase = Cast<ACharacterBase>(Character))
+		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, LaunchMontage, 1.f, FName("ChargedAttack_Up_Start"));
+		MontageTask->OnCompleted.AddDynamic(this, &UGA_ChargedAttack::OnLaunchMontageEnded);
+		MontageTask->OnInterrupted.AddDynamic(this, &UGA_ChargedAttack::OnLaunchMontageEnded);
+		MontageTask->ReadyForActivation();
+	}
+
+	if (bAnyHitLanded) // only schedule the freeze/follow-up if something was actually hit
+	{
+		UAbilityTask_WaitDelay* RiseDelay = UAbilityTask_WaitDelay::WaitDelay(this, RiseDuration);
+		RiseDelay->OnFinish.AddDynamic(this, &UGA_ChargedAttack::OnRiseDelayFinished);
+		RiseDelay->ReadyForActivation();
+	}
+	else if (!LaunchMontage)
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}
+}
+
+void UGA_ChargedAttack::OnRiseDelayFinished()
+{
+	if (!CachedTargetCharacter.IsValid()) return;
+
+	ACharacter* TargetChar = CachedTargetCharacter.Get();
+
+	// Freeze the target in place at wherever their launch arc has carried them to
+	TargetChar->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	TargetChar->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+	TargetChar->GetCharacterMovement()->MaxFlySpeed = 0.f;
+
+	FVector TargetFrozenLocation = TargetChar->GetActorLocation();
+
+	if (CachedPlayerCharacter.IsValid())
+	{
+		ACharacter* PlayerChar = CachedPlayerCharacter.Get();
+
+		if (ACharacterBase* PlayerBase = Cast<ACharacterBase>(PlayerChar))
 		{
 			PlayerBase->SetAirborne(true);
 			PlayerBase->StartAirborneFallTimer(AirborneFallDelay);
 		}
 
-		Character->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		Character->GetCharacterMovement()->Velocity = FVector::ZeroVector;
-		Character->GetCharacterMovement()->MaxFlySpeed = 0.f;
+		PlayerChar->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		PlayerChar->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+		PlayerChar->GetCharacterMovement()->MaxFlySpeed = 0.f;
 
-		// MODIFIED — sync player's Z to the target's actual final height, not an independent offset
-		if (bHasTargetLocation)
-		{
-			FVector PlayerLocation = Character->GetActorLocation();
-			FVector PlayerNewLocation = FVector(PlayerLocation.X, PlayerLocation.Y, TargetFinalLocation.Z);
-			Character->SetActorLocation(PlayerNewLocation, true);
-		}
-		else
-		{
-			// fallback, shouldn't happen since this block only runs when bAnyHitLanded is true
-			FVector PlayerNewLocation = Character->GetActorLocation() + FVector(0.f, 0.f, PopUpHeight);
-			Character->SetActorLocation(PlayerNewLocation, true);
-		}
+		FVector PlayerLoc = PlayerChar->GetActorLocation();
+		FVector PlayerNewLocation = FVector(PlayerLoc.X, PlayerLoc.Y, TargetFrozenLocation.Z);
+		PlayerChar->SetActorLocation(PlayerNewLocation, true); // player's own teleport, matching target's height
 	}
 }
 
