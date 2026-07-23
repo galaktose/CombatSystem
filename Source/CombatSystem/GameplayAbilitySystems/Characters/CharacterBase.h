@@ -24,6 +24,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem")
 	class UAbilitySystemComponent* AbilitySystemComponent;
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem")   
 		class UCombatAttributeSet* CombatAttributeSet;                             
 
@@ -63,7 +66,6 @@ protected:
 	virtual void OnRep_PlayerState() override;
 
 	virtual void Tick(float DeltaTime) override;
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	// Airborne fall handling
 	FTimerHandle AirborneFallTimer;

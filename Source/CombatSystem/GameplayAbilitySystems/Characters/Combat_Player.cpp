@@ -3,13 +3,20 @@
 #include "EnhancedInputComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "../Attributes/Abilities/LockOnComponent.h"
 
+ACombat_Player::ACombat_Player()
+{
+	LockOnComponent = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
+}
 void ACombat_Player::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
+		if (IA_LockOn)
+			EIC->BindAction(IA_LockOn, ETriggerEvent::Started, this, &ACombat_Player::Input_ToggleLockOn);
 		if (IA_Attack_Tap)
 			EIC->BindAction(IA_Attack_Tap, ETriggerEvent::Triggered, this, &ACombat_Player::Input_Attack_Tap);
 		if (IA_Attack_Hold)
@@ -62,6 +69,10 @@ void ACombat_Player::PossessedBy(AController* NewController)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AirComboAbilityClass, 1));
 	}
+	if (OmniSlashAbilityClass)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(OmniSlashAbilityClass, 1));
+	}
 	// Register attribute change 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
 		UCombatAttributeSet::GetHealthAttribute()).AddUObject(this, &ACombat_Player::HandleHealthAttributeChanged);
@@ -94,6 +105,13 @@ void ACombat_Player::Input_ToggleStance()
 	OnSpecialStatusChanged.Broadcast(GetSpecialAbilityStatus());
 }
 
+void ACombat_Player::Input_ToggleLockOn()
+{
+	if (LockOnComponent)
+	{
+		LockOnComponent->ToggleLockOn();
+	}
+}
 void ACombat_Player::Input_Attack_Tap()
 {
 	if (bIsAirborne && CurrentStance == ECombatStance::Melee)
@@ -273,13 +291,10 @@ void ACombat_Player::OnReloadAnimComplete()
 
 void ACombat_Player::Input_Special()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Input_Special called"));
 
 	if (AbilitySystemComponent && SpecialAbilityClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Attempting to activate special ability"));
 		bool bActivated = AbilitySystemComponent->TryActivateAbilityByClass(SpecialAbilityClass);
-		UE_LOG(LogTemp, Warning, TEXT("TryActivateAbilityByClass result: %s"), bActivated ? TEXT("SUCCESS") : TEXT("FAILED"));
 	}
 	else
 	{
@@ -294,7 +309,17 @@ void ACombat_Player::Input_Special()
 
 void ACombat_Player::Input_OmniSlash()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Input_OmniSlash triggered"));
+	if (CurrentStance == ECombatStance::Melee && !bIsAirborne && AbilitySystemComponent && OmniSlashAbilityClass)
+	{
+		if (LockOnComponent && LockOnComponent->IsLockedOn())
+		{
+			AbilitySystemComponent->TryActivateAbilityByClass(OmniSlashAbilityClass);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Omni-Slash requires being locked on to a target"));
+		}
+	}
 }
 
 void ACombat_Player::HandleHealthAttributeChanged(const FOnAttributeChangeData& Data)

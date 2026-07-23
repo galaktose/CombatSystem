@@ -18,6 +18,7 @@ class COMBATSYSTEM_API ACombat_Player : public ACharacterBase
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PossessedBy(AController* NewController) override;
+	ACombat_Player();
 
 	// Blueprint events for UI or other systems to bind to
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Events")
@@ -67,6 +68,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void OnReloadAnimComplete();
 
+	// Lock-On Component for targeting
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	class ULockOnComponent* LockOnComponent;
 
 	void ResetAirCombo();
 
@@ -92,6 +96,7 @@ protected:
 	void Input_Attack_Tap();
 	void Input_Attack_Hold();
 	void Input_Attack_Hold_Released();
+	void Input_ToggleLockOn();
 
 	// Attribute change handlers
 	void HandleHealthAttributeChanged(const FOnAttributeChangeData& Data);
@@ -116,6 +121,8 @@ protected:
 	class UInputAction* IA_Special;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Special2;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_LockOn;
 
 	//Ability Classes
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
@@ -130,6 +137,8 @@ protected:
 	TSubclassOf<class UGameplayAbility> ChargedAttackAbilityClass;
 	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
 	TSubclassOf<class UGameplayAbility> AirComboAbilityClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Abilities")
+	TSubclassOf<class UGameplayAbility> OmniSlashAbilityClass;
 
 	// Stance change event
 	UFUNCTION(BlueprintImplementableEvent, Category = "Combat")
